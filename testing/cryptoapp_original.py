@@ -58,31 +58,26 @@ st.markdown("""**Linear Regression Channel**""")
 st.markdown("""Chart shows the linear regression of time and price with standard deviation channels and the SMAs.""")
 
 
-def get_timeseries_data(asset, start, end):
-
+def timeseries_linear_regression(asset, start, end):
+    
     # API pull from Messari for timeseries price data
     price_data = messari.get_metric_timeseries(asset_slugs=asset, asset_metric = "price", start=start, end=end)
     
     # Filters the data to capture the closing price only
     price_data = pd.DataFrame(price_data[asset]['close'])
-    price_data = price_data.rename(columns={"close" : "Price"})
+    price_data = price_data.rename(columns={"close" : asset})
     price_data.index.names = ['Date']
-    
-    # Function returns the daily returns, cumulative returns, and real price of the asset
-    price_data["Daily Returns"] = price_data["Price"].pct_change()
-    price_data["Cumulative Returns"] = (1 + price_data["Daily Returns"]).cumprod()
 
+    # Calculates cumulative returns of the asset
+    # Column title is the "Asset" instead of "Cumulative Returns" to simplify the concatation of multiple assets later
+    price_data[asset] = price_data[asset].pct_change()
+    price_data[asset] = (1 + price_data[asset]).cumprod()
     price_data.dropna(inplace=True)
-    return price_data
-
-price_data = get_timeseries_data(selected_asset, start_date, end_date)
-
-def timeseries_linear_regression(price_data, start, end):
     
-    sma200 = price_data["Cumulative Returns"].rolling(window=200).mean()
-    sma50 = price_data["Cumulative Returns"].rolling(window=50).mean()
+    sma200 = price_data.rolling(window=200).mean()
+    sma50 = price_data.rolling(window=50).mean()
     
-    std = price_data["Cumulative Returns"].std()
+    std = price_data[asset].std()
     
     linear_regression_df = price_data
     linear_regression_df.reset_index(inplace=True)
@@ -92,11 +87,11 @@ def timeseries_linear_regression(price_data, start, end):
     X = fa.datetimeToFloatyear(X) # for example, 2020-07-01 becomes 2020.49589041
     X = np.array(X) # converts list to a numpy array
     X = X[::,None] # converts row vector to column vector (just column vector is acceptable)
-    y = linear_regression_df["Cumulative Returns"] # get y data (relative price)
+    y = linear_regression_df[asset] # get y data (relative price)
     y = y.values # converts Series to numpy
     y = y[::,None] # row vector to column vector (just column vector is acceptable)
     
-    slope, intercept, x, fittedline = fa.timeseriesLinearRegression(linear_regression_df["Date"], linear_regression_df["Cumulative Returns"])
+    slope, intercept, x, fittedline = fa.timeseriesLinearRegression(linear_regression_df["Date"], linear_regression_df[asset])
 
     # Trendlines for standard deviation parallel channels
     fittedline_upper_1 = fittedline + std
@@ -106,7 +101,7 @@ def timeseries_linear_regression(price_data, start, end):
     
     # Graph of of linear regression
     fig = plt.figure(figsize=(16, 10)) # make canvas of picture. figsize is optional
-    plt.plot(linear_regression_df["Date"], linear_regression_df["Cumulative Returns"], label="Original", color="black") 
+    plt.plot(linear_regression_df["Date"], linear_regression_df[asset], label="Original", color="black") 
     plt.plot(linear_regression_df["Date"], fittedline, label="Prediction", color="red")
     plt.plot(linear_regression_df["Date"], fittedline_upper_1, label="1 Standard Deviation", color="green")
     plt.plot(linear_regression_df["Date"], fittedline_lower_1, color="green")
@@ -117,12 +112,12 @@ def timeseries_linear_regression(price_data, start, end):
 
     plt.xlabel("Date") # optional
     plt.ylabel("Price Change") # optional
-    plt.title(f"Timeseries Data") # optional
+    plt.title(f"{asset} Timeseries Data") # optional
     plt.legend(loc="best") # optional
 
     return st.pyplot()
     
-chart = timeseries_linear_regression(price_data, start_date, end_date)
+chart = timeseries_linear_regression(selected_asset, start_date, end_date)
 
 
 

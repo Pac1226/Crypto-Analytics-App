@@ -13,7 +13,6 @@ import holoviews as hv
 hv.extension('bokeh')
 
 # API keys & Streamlit secrerts
-#"messari_api_key:", st.secrets["MESSARI_API_KEY"])
 messari_api_key = st.secrets["MESSARI_API_KEY"] # Insert your Messari API private key into a Streamlit secrets file 
 messari = Messari(messari_api_key) # A paid subscription to Messari API is required
 
@@ -57,7 +56,8 @@ end_date = pd.to_datetime("today")
 st.markdown("""**Linear Regression Channel**""")
 st.markdown("""Chart shows the linear regression of time and price with standard deviation channels and the SMAs.""")
 
-
+# Function to pull timeseries price data for assets
+# Feeds into functions that follow afterwards
 def get_timeseries_data(asset, start, end):
 
     # API pull from Messari for timeseries price data
@@ -76,6 +76,8 @@ def get_timeseries_data(asset, start, end):
     return price_data
 
 price_data = get_timeseries_data(selected_asset, start_date, end_date)
+
+st.dataframe(price_data)
 
 def timeseries_linear_regression(price_data, start, end):
     
@@ -125,27 +127,61 @@ def timeseries_linear_regression(price_data, start, end):
 chart = timeseries_linear_regression(price_data, start_date, end_date)
 
 
+# Analytics Section 2: Function for Token Statistics & Performance #
 
+risk_free_rate = .025 # necessary for Sortino/Sharpe Ratio calculations
 
-
-# Function to pull timeseries price data for assets
-# Feeds into functions that follow afterwards
-def get_timeseries_data(asset, start, end):
-
+# Function to display summary statistics and financial ratios
+def get_token_statistics(asset, start, end):
+    
     # API pull from Messari for timeseries price data
     price_data = messari.get_metric_timeseries(asset_slugs=asset, asset_metric = "price", start=start, end=end)
-    
+
     # Filters the data to capture the closing price only
     price_data = pd.DataFrame(price_data[asset]['close'])
-    price_data = price_data.rename(columns={"close" : f"{asset} Price"})
+    price_data = price_data.rename(columns={"close" : asset})
     price_data.index.names = ['Date']
+    price_data = price_data.tail(365)
     
-    # Function returns the daily returns, cumulative returns, and real price of the asset
-    price_data[f"{asset} Daily Returns"] = price_data[f"{asset} Price"].pct_change()
-    price_data[f"{asset} Cumulative Returns"] = (1 + price_data[f"{asset} Daily Returns"]).cumprod()
+    # Calculates average daily returns and cumulative returns of the asset
+    daily_returns = pd.DataFrame(price_data.pct_change().dropna())
+    cumulative_returns = pd.DataFrame((1 + daily_returns).cumprod())
+    total_return = cumulative_returns.iloc[-1]
+    peak = cumulative_returns.expanding(min_periods=1).max()
+    ath = peak.max()
 
-    price_data.dropna(inplace=True)
-    return price_data
+    # Calculates annualized returns / standard deviation, the variance, and max drawdown
+    standard_deviation = daily_returns.std() * np.sqrt(365)
+    max_drawdown = (cumulative_returns/peak-1).min()
+    negative_standard_deviation = daily_returns[daily_returns<0].std() * np.sqrt(365)
+
+    # Calculates the Sharpe, Sortino, & Calmar Ratios. Negative Annualized Standard Deviation is used for Sortino Ratio
+    sharpe_ratio = (total_return - risk_free_rate) / standard_deviation
+    sortino_ratio = (total_return - risk_free_rate) / negative_standard_deviation
+    calmar_ratio = (total_return - risk_free_rate) / (abs(max_drawdown))
+
+    # Combines three metrics into a single DataFrame
+    alist = []
+    alist.append(calmar_ratio)
+    alist.append(sortino_ratio)
+    alist.append(sharpe_ratio)
+    alist.append(max_drawdown)
+    alist.append(ath)
+    alist.append(standard_deviation)
+    alist.append(total_return)
+    token_statistics = pd.DataFrame(alist).T
+    token_statistics.columns = ["Calmar Ratio", "Sortino Ratio", "Sharpe Ratio", "Max Drawdown", "Peak", "Annual Volatity", "Price Change"]
+    token_statistics = token_statistics.round(2)
+
+    return token_statistics
+
+bar_chart = get_token_statistics(selected_asset, start_date, end_date).hvplot.bar(hover_color="green", rot=45)
+
+st.markdown("""**Financial Ratios & Statistics**""")
+st.markdown("""Chart displays key risk/return metrics and financial ratios.""")
+
+st.bokeh_chart(hv.render(bar_chart, backend="bokeh"))
+
 
 # Builds two DataFrames that combine data for all the assets
 # First DataFrame shows the close price data
@@ -193,66 +229,6 @@ def load_crypto_prices(start_date, end_date):
 
 crypto_returns, crypto_prices = load_crypto_prices(start_date, end_date)
 
-st.markdown("""**Price History**""")
-st.markdown("""Interactive chart displays the asset's price history.""")
-price_chart =  crypto_prices[selected_asset].hvplot.line(color="black", hover_color="green", title=None, rot=45)
-st.bokeh_chart(hv.render(price_chart, backend="bokeh"))
-
-
-# Analytics Section 2: Function for Token Statistics & Performance #
-
-risk_free_rate = .025 # necessary for Sortino/Sharpe Ratio calculations
-
-# Function to display summary statistics and financial ratios
-def get_token_statistics(asset, start, end):
-    
-    # API pull from Messari for timeseries price data
-    price_data = messari.get_metric_timeseries(asset_slugs=asset, asset_metric = "price", start=start, end=end)
-
-    # Filters the data to capture the closing price only
-    price_data = pd.DataFrame(price_data[asset]['close'])
-    price_data = price_data.rename(columns={"close" : asset})
-    price_data.index.names = ['Date']
-    price_data = price_data
-    
-    # Calculates average daily returns and cumulative returns of the asset
-    daily_returns = pd.DataFrame(price_data.pct_change().dropna())
-    cumulative_returns = pd.DataFrame((1 + daily_returns).cumprod())
-    total_return = cumulative_returns.iloc[-1]
-    peak = cumulative_returns.expanding(min_periods=1).max()
-    ath = peak.max()
-
-    # Calculates annualized returns / standard deviation, the variance, and max drawdown
-    standard_deviation = daily_returns.std() * np.sqrt(365)
-    max_drawdown = (cumulative_returns/peak-1).min()
-    negative_standard_deviation = daily_returns[daily_returns<0].std() * np.sqrt(365)
-
-    # Calculates the Sharpe, Sortino, & Calmar Ratios. Negative Annualized Standard Deviation is used for Sortino Ratio
-    sharpe_ratio = (total_return - risk_free_rate) / standard_deviation
-    sortino_ratio = (total_return - risk_free_rate) / negative_standard_deviation
-    calmar_ratio = (total_return - risk_free_rate) / (abs(max_drawdown))
-
-    # Combines three metrics into a single DataFrame
-    alist = []
-    alist.append(calmar_ratio)
-    alist.append(sortino_ratio)
-    alist.append(sharpe_ratio)
-    alist.append(max_drawdown)
-    alist.append(ath)
-    alist.append(standard_deviation)
-    alist.append(total_return)
-    token_statistics = pd.DataFrame(alist).T
-    token_statistics.columns = ["Calmar Ratio", "Sortino Ratio", "Sharpe Ratio", "Max Drawdown", "Peak", "Annual Volatity", "Price Change"]
-    token_statistics = token_statistics.round(2)
-
-    return token_statistics
-
-bar_chart = get_token_statistics(selected_asset, start_date, end_date).hvplot.bar(color="black", hover_color="green", rot=45)
-
-st.markdown("""**Financial Ratios & Statistics**""")
-st.markdown("""Chart displays key risk/return metrics and financial ratios.""")
-
-st.bokeh_chart(hv.render(bar_chart, backend="bokeh"))
 
 # Function to calculate the asset correlations
 def correlations(asset, days):
@@ -282,7 +258,7 @@ number_of_days = number_of_days(number_of_months)
 
 # Correlations heatmap
 correlations = correlations(selected_asset, number_of_days)
-correlations_plot = correlations.hvplot.heatmap(cmap=["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"], rot=45, xaxis=None)
+correlations_plot = correlations.hvplot.heatmap(hover_color="black", rot=45, xaxis=None)
 
 st.markdown("""**Asset Correlations**""")
 st.markdown("""Heatmap displays the price correlation with other assets over selected time period.""")
