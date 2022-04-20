@@ -3,7 +3,6 @@
 # Loads basic libraries and dependencies
 import pandas as pd
 import numpy as np
-import datetime as dt
 import os
 import financialanalysis as fa
 import streamlit as st
@@ -11,8 +10,6 @@ from messari.messari import Messari
 import matplotlib.pyplot as plt
 import hvplot.pandas
 import holoviews as hv
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 hv.extension('bokeh')
 
 # API keys & Streamlit secrerts
@@ -27,25 +24,24 @@ st.set_option('deprecation.showPyplotGlobalUse', False)
 st.title('Crypto Analytics Application')
 
 st.markdown("""
-This app connects to crypto APIs and runs a series of models 
-to assess past performance and predict future price trends!
+This app connects to crypto APIs and performs statistical analyses 
+to predict future price trends!
 * **Python libraries:** pandas, numpy, os, streamlit, messari.messari, financialanalysis, scikit-learn
-* **Data source:** [Messari.io](https://messari.io/api)
-* **Models:** linear regression, risk/return analysis, and statistical correlations
+* **Data source:** [Messari.io](https://messari.io/api).
+* **Models:** linear regression, risk/return, and asset correlations
 """)
 
 
 # Sidebar widgets: cryptocurrency and time period selection
 st.sidebar.header('User Input Features')
-st.sidebar.caption('Select a crypto asset and the number of historical months to include in your analysis.')
+st.sidebar.caption('Select a crypto asset and the number of months to include in your analysis.')
 
 
 # Widget to select cryptocurrency
 cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano', 
                     'BNB', 'Solana', 'Terra', 
                     'Avalanche', 'Polkadot', 'Polygon',
-                    'NEAR', 'Algorand', 'Cosmos', 
-                    'Fantom','Mina', 'Celo']
+                    'NEAR', 'Algorand', 'Cosmos']
 
 selected_asset = st.sidebar.selectbox('Cryptocurrency', cryptocurrencies)
 
@@ -58,7 +54,7 @@ end_date = pd.to_datetime("today")
 
 # Analytics Section 1: Function for Linear Regressions #
 
-st.markdown("""**Linear Regression Parallel Channel**""")
+st.markdown("""**Linear Regression Channel**""")
 st.markdown("""Chart shows the linear regression of time and price with standard deviation channels and the SMAs.""")
 
 
@@ -83,10 +79,8 @@ price_data = get_timeseries_data(selected_asset, start_date, end_date)
 
 def timeseries_linear_regression(price_data, start, end):
     
-    price_data = price_data.round(2)
-
-    sma200 = price_data["Price"].rolling(window=200).mean()
-    sma50 = price_data["Price"].rolling(window=50).mean()
+    sma200 = price_data["Cumulative Returns"].rolling(window=200).mean()
+    sma50 = price_data["Cumulative Returns"].rolling(window=50).mean()
     
     std = price_data["Cumulative Returns"].std()
     
@@ -110,30 +104,29 @@ def timeseries_linear_regression(price_data, start, end):
     fittedline_upper_2 = fittedline + (std*2)
     fittedline_lower_2 = fittedline - (std*2)
     
-    chart = make_subplots(specs=[[{"secondary_y" : True}]])
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=linear_regression_df["Price"], name="Price", line_color="black"), secondary_y=False,)
-    #chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=linear_regression_df["Cumulative Returns"], line_color="white", showlegend=False, hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline, name="Prediction", line_color="lightslategray", hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_lower_1, name="Standard Deviation", line_color="forestgreen", hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_upper_1, line_color="forestgreen", showlegend=False, hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_lower_2, name="2 Standard Deviations", line_color="rosybrown", hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_upper_2, name="2 Standard Deviations", line_color="rosybrown", showlegend=False, hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=sma200, name="200-Day SMA", line_color="gray"), secondary_y=False,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=sma50, name="50-Day SMA", line_color="lightgray"), secondary_y=False,)
+    # Graph of of linear regression
+    fig = plt.figure(figsize=(16, 10)) # make canvas of picture. figsize is optional
+    plt.plot(linear_regression_df["Date"], linear_regression_df["Cumulative Returns"], label="Original", color="black") 
+    plt.plot(linear_regression_df["Date"], fittedline, label="Prediction", color="red")
+    plt.plot(linear_regression_df["Date"], fittedline_upper_1, label="1 Standard Deviation", color="green")
+    plt.plot(linear_regression_df["Date"], fittedline_lower_1, color="green")
+    plt.plot(linear_regression_df["Date"], fittedline_upper_2, color="blue")
+    plt.plot(linear_regression_df["Date"], fittedline_lower_2, label="2 Standard Deviations", color="blue")
+    plt.plot(linear_regression_df["Date"], sma200, label="200-Day Simple Moving Average", color="grey") # draw line (label is optional)
+    plt.plot(linear_regression_df["Date"], sma50, label="50-Day Simple Moving Average", color="lightgrey")
 
-    chart.update_xaxes(title_text = "Date", showline=False)
-    chart.update_yaxes(title_text="Actual Price", range=[price_data["Price"].min() * .7, price_data["Price"].max() * 1.2], zeroline = True, secondary_y=False)
-    chart.update_yaxes(showticklabels = False, range=[price_data["Cumulative Returns"].min() * .7, price_data["Cumulative Returns"].max()* 1.2], secondary_y=True)
-    chart.update_layout(template="simple_white")
-    chart.update_traces(marker_colorscale="Earth", selector=dict(type='scatter'))
-    chart.update_traces(fill="none")
-    chart.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1, xanchor="left", x=.01, font = dict(size = 10, color = "black")))
-    chart.update_layout(plot_bgcolor='white')
-    chart.update_layout(margin=dict(l=0, r=0, t=55))
+    plt.xlabel("Date") # optional
+    plt.ylabel("Price Change") # optional
+    plt.title(f"Timeseries Data") # optional
+    plt.legend(loc="best") # optional
 
-    return st.plotly_chart(chart)
-
+    return st.pyplot()
+    
 chart = timeseries_linear_regression(price_data, start_date, end_date)
+
+
+
+
 
 # Function to pull timeseries price data for assets
 # Feeds into functions that follow afterwards
@@ -171,31 +164,25 @@ def load_crypto_prices(start_date, end_date):
     cosmos_df = get_timeseries_data('Cosmos', start_date, end_date)
     algorand_df = get_timeseries_data('Algorand', start_date, end_date)
     near_df = get_timeseries_data('NEAR', start_date, end_date)
-    fantom_df = get_timeseries_data('Fantom', start_date, end_date)
-    mina_df = get_timeseries_data('Mina', start_date, end_date)
-    celo_df = get_timeseries_data('Celo', start_date, end_date)
 
     crypto_returns = pd.concat([bitcoin_df["Bitcoin Cumulative Returns"], 
         ethereum_df["Ethereum Cumulative Returns"], bnb_df["BNB Cumulative Returns"],
         cardano_df["Cardano Cumulative Returns"], solana_df["Solana Cumulative Returns"], terra_df["Terra Cumulative Returns"], 
         avalanche_df["Avalanche Cumulative Returns"], polkadot_df["Polkadot Cumulative Returns"], polygon_df["Polygon Cumulative Returns"], 
-        cosmos_df["Cosmos Cumulative Returns"], algorand_df["Algorand Cumulative Returns"], near_df["NEAR Cumulative Returns"], 
-        fantom_df["Fantom Cumulative Returns"], mina_df["Mina Cumulative Returns"], celo_df["Celo Cumulative Returns"]], axis= "columns", join="inner")
+        cosmos_df["Cosmos Cumulative Returns"], algorand_df["Algorand Cumulative Returns"], near_df["NEAR Cumulative Returns"]], axis= "columns", join="inner")
 
     crypto_prices = pd.concat([bitcoin_df["Bitcoin Price"], 
     ethereum_df["Ethereum Price"], bnb_df["BNB Price"],
     cardano_df["Cardano Price"], solana_df["Solana Price"], terra_df["Terra Price"], 
     avalanche_df["Avalanche Price"], polkadot_df["Polkadot Price"], polygon_df["Polygon Price"], 
-    cosmos_df["Cosmos Price"], algorand_df["Algorand Price"], near_df["NEAR Price"],
-    fantom_df["Fantom Price"], mina_df["Mina Price"], celo_df["Celo Price"]], axis= "columns", join="inner")
+    cosmos_df["Cosmos Price"], algorand_df["Algorand Price"], near_df["NEAR Price"]], axis= "columns", join="inner")
 
     column_names = ["Bitcoin", "Ethereum", 
                     "BNB Chain", "Cardano",
                     "Solana", "Terra",
                     "Avalanche", "Polkadot",
                     "Polygon", "Cosmos",
-                    "Algorand", "NEAR", 
-                    "Fantom", "Mina", "Celo"]
+                    "Algorand", "NEAR"]
 
     crypto_returns.columns = column_names
     crypto_prices.columns = column_names
@@ -205,6 +192,12 @@ def load_crypto_prices(start_date, end_date):
     return crypto_returns, crypto_prices
 
 crypto_returns, crypto_prices = load_crypto_prices(start_date, end_date)
+
+st.markdown("""**Price History**""")
+st.markdown("""Interactive chart displays the asset's price history.""")
+price_chart =  crypto_prices[selected_asset].hvplot.line(color="black", hover_color="green", title=None, rot=45)
+st.bokeh_chart(hv.render(price_chart, backend="bokeh"))
+
 
 # Analytics Section 2: Function for Token Statistics & Performance #
 
@@ -289,7 +282,7 @@ number_of_days = number_of_days(number_of_months)
 
 # Correlations heatmap
 correlations = correlations(selected_asset, number_of_days)
-correlations_plot = correlations.hvplot.heatmap(cmap="Greys", rot=45, xaxis=None)
+correlations_plot = correlations.hvplot.heatmap(cmap=["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce", "#ddb7b1", "#cc7878", "#933b41", "#550b1d"], rot=45, xaxis=None)
 
 st.markdown("""**Asset Correlations**""")
 st.markdown("""Heatmap displays the price correlation with other assets over selected time period.""")
