@@ -7,4 +7,5 @@ matplotlib==3.4.3
 hvplot==0.7.3
 holoviews==1.14.8
 plotly==5.6.0
+bokeh==2.4.1
 alpaca-trade-api==1.5.1
