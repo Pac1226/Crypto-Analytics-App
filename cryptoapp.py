@@ -1,8 +1,6 @@
 """Crypto Linear Regression App by Peter Lieberman"""
 
 # Loads basic libraries and dependencies
-from email.errors import FirstHeaderLineIsContinuationDefect
-from tkinter.tix import DisplayStyle
 from PIL import Image
 import pandas as pd
 import numpy as np
