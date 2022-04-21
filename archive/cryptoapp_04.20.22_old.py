@@ -3,7 +3,6 @@
 # Loads basic libraries and dependencies
 from email.errors import FirstHeaderLineIsContinuationDefect
 from tkinter.tix import DisplayStyle
-from PIL import Image
 import pandas as pd
 import numpy as np
 import datetime as dt
@@ -11,7 +10,6 @@ import os
 import financialanalysis as fa
 import streamlit as st
 from messari.messari import Messari
-import alpaca_trade_api as tradeapi
 import matplotlib.pyplot as plt
 import hvplot.pandas
 import holoviews as hv
@@ -24,13 +22,11 @@ hv.extension('bokeh')
 messari_api_key = st.secrets["MESSARI_API_KEY"] # Insert your Messari API private key into a Streamlit secrets file 
 messari = Messari(messari_api_key) # A paid subscription to Messari API is required
 
-alpaca_api_key = st.secrets["ALPACA_API_KEY"]
-alpaca_secret_key = st.secrets["ALPACA_SECRET_KEY"]
-
 # Application Page Configuration: Headers & Sidebar #
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
-st.header('Crypto Asset Analytics')
+
+st.title('Crypto Analytics Application')
 
 st.markdown("""
 This app connects to crypto APIs and runs a series of models 
@@ -55,6 +51,7 @@ cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano',
 
 selected_asset = st.sidebar.selectbox('Cryptocurrency', cryptocurrencies)
 
+
 # Widget to select timeperiod
 number_of_months = st.sidebar.slider('Number of Months', min_value=1, max_value=60)
 start_date = pd.to_datetime("today") - pd.DateOffset(months=number_of_months)
@@ -75,8 +72,8 @@ number_of_days = number_of_days(number_of_months)
 
 # Analytics Section 1: Function for Linear Regressions #
 
-st.markdown("""**Linear Regression Channel**""")
-st.markdown("""Regression line of time and price with standard deviation channels and Simple Moving Averages.""")
+st.markdown("""**Linear Regression Parallel Channel**""")
+st.markdown("""Chart shows the linear regression of time and price with standard deviation channels and the SMAs.""")
 
 
 def get_timeseries_data(asset, start, end):
@@ -275,12 +272,12 @@ def get_token_statistics(asset, start, end, days):
 bar_chart = get_token_statistics(selected_asset, start_date, end_date, number_of_days).hvplot.bar(color="black", hover_color="green", rot=45)
 
 st.markdown("""**Financial Ratios & Statistics**""")
-st.markdown("""Risk/return metrics and performance ratios over selected time period.""")
+st.markdown("""Chart displays key risk/return metrics and financial ratios over selected time period.""")
 
 st.bokeh_chart(hv.render(bar_chart, backend="bokeh"))
 
 # Function to calculate the asset correlations
-def crypto_correlations(asset, days):
+def correlations(asset, days):
     
     correlations = crypto_returns.tail(int(days)).corr() * crypto_returns.tail(int(days)).corr()
     correlation_asset = correlations[asset]
@@ -293,58 +290,11 @@ def crypto_correlations(asset, days):
     return correlation_asset
 
 # Correlations heatmap
-correlations = crypto_correlations(selected_asset, number_of_days)
+correlations = correlations(selected_asset, number_of_days)
 correlations_plot = correlations.hvplot.heatmap(cmap="Greys", rot=45, xaxis=None)
 
 st.markdown("""**Asset Correlations**""")
-st.markdown("""Price correlation with other assets over selected time period.""")
+st.markdown("""Heatmap displays the price correlation with other assets over selected time period.""")
+st.caption("(A maximum of 18-months are included in calculation.)") 
 st.latex("(r^2)")
 st.bokeh_chart(hv.render(correlations_plot, backend="bokeh"))
-st.caption("(A maximum of 18-months are included in calculation due to limited price history for most assets.)") 
-
-
-# Calculating correlations with SPY, QQQ, ARKK over time period selected by user
-alpaca = tradeapi.REST(alpaca_api_key, alpaca_secret_key, api_version="v3")
-
-start = start_date.strftime("%Y-%m-%d")
-today = end_date.strftime("%Y-%m-%d")
-tickers = ["SPY", "QQQ", "ARKK"]
-timeframe = "1D"
-
-indices_df = alpaca.get_bars(tickers, timeframe, start = start, end = today ).df
-
-spy_df = indices_df[indices_df['symbol']=='SPY'].drop('symbol', axis=1)
-spy_df = pd.DataFrame(spy_df["close"])
-spy_df = spy_df.rename(columns={"close": "SPY"})
-
-qqq_df = indices_df[indices_df['symbol']=='QQQ'].drop('symbol', axis=1)
-qqq_df = pd.DataFrame(qqq_df["close"])
-qqq_df = qqq_df.rename(columns={"close": "QQQ"})
-
-arkk_df = indices_df[indices_df['symbol']=='ARKK'].drop('symbol', axis=1)
-arkk_df = pd.DataFrame(arkk_df["close"])
-arkk_df = arkk_df.rename(columns={"close": "ARKK"})
-
-stock_prices = pd.concat([spy_df, qqq_df , arkk_df],axis="columns", join="inner")
-stock_prices.reset_index(inplace=True)
-stock_prices = stock_prices.rename(columns={"timestamp": "Date"})
-stock_prices["Date"] = stock_prices["Date"].dt.strftime('%Y-%m-%d')
-stock_prices["Date"] = pd.to_datetime(stock_prices["Date"], infer_datetime_format=True)
-stock_prices = stock_prices.set_index("Date")
-
-daily_returns = stock_prices.pct_change().dropna()
-cumulative_returns = (1 + daily_returns).cumprod()
-
-spy_correlation = price_data["Cumulative Returns"].corr(cumulative_returns["SPY"]) * price_data["Cumulative Returns"].corr(cumulative_returns["SPY"]).round(2)
-spy_correlation = spy_correlation.round(2)
-qqq_correlation = price_data["Cumulative Returns"].corr(cumulative_returns["QQQ"]) * price_data["Cumulative Returns"].corr(cumulative_returns["QQQ"]).round(2)
-qqq_correlation = qqq_correlation.round(2)
-arkk_correlation = price_data["Cumulative Returns"].corr(cumulative_returns["ARKK"]) * price_data["Cumulative Returns"].corr(cumulative_returns["ARKK"]).round(2)
-arkk_correlation = arkk_correlation.round(2)
-
-st.sidebar.header('Stock Market Correlation')
-st.sidebar.caption("Correlation with market indices over time period.")
-#col1, col2, col3 = st.columns(3)
-st.sidebar.metric("S&P 500 (SPY)", spy_correlation, delta_color="off")
-st.sidebar.metric("NASDAQ (QQQ)", qqq_correlation, delta_color="off")
-st.sidebar.metric("Ark Innovation Fund (ARKK)", arkk_correlation, delta_color="off")
