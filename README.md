@@ -2,6 +2,7 @@
 
 This is an interactive web application hosted on Streamlit that performs statistical analysis on cryptocurrency prices based on user inputs. It connects to the Messari API, which aggreggates data from crypto exchanges, protocols, and analytics firms. The app runs a series of statistical models on timeseries price data and displays key insights as data visualizations.
 
+The main script is **"cryptoapp.py"** and the live application can be viewed on [Streamlit](https://share.streamlit.io/pac1226/crypto-application/main/cryptoapp.py).
 
 ## Technologies
 
