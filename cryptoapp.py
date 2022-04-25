@@ -36,6 +36,7 @@ to assess past performance and predict future price trends!
 * **Python libraries:** pandas, numpy, os, streamlit, messari.messari, financialanalysis, scikit-learn
 * **Data source:** [Messari.io](https://messari.io/api)
 * **Models:** linear regression, risk/return analysis, and statistical correlations
+* **Charts:** all charts are interactive and can be saved as images
 """)
 
 
@@ -126,26 +127,26 @@ def timeseries_linear_regression(price_data, start, end):
     fittedline_lower_2 = fittedline - (std*2)
     
     chart = make_subplots(specs=[[{"secondary_y" : True}]])
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=linear_regression_df["Price"], name="Price", line_color="black"), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=linear_regression_df["Price"], name="Price", line_color="black"), secondary_y=True,)
     #chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=linear_regression_df["Cumulative Returns"], line_color="white", showlegend=False, hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline, name="Prediction", line_color="lightslategray", hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_lower_1, name="Standard Deviation", line_color="forestgreen", hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_upper_1, line_color="forestgreen", showlegend=False, hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_lower_2, name="2 Standard Deviations", line_color="rosybrown", hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_upper_2, name="2 Standard Deviations", line_color="rosybrown", showlegend=False, hoverinfo='none'), secondary_y=True,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=sma200, name="200-Day SMA", line_color="gray"), secondary_y=False,)
-    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=sma50, name="50-Day SMA", line_color="lightgray"), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline, name="Prediction", line_color="lightslategray", hoverinfo='none'), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_lower_1, name="Standard Deviation", line_color="forestgreen", hoverinfo='none'), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_upper_1, line_color="forestgreen", showlegend=False, hoverinfo='none'), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_lower_2, name="2 Standard Deviations", line_color="rosybrown", hoverinfo='none'), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=fittedline_upper_2, name="2 Standard Deviations", line_color="rosybrown", showlegend=False, hoverinfo='none'), secondary_y=False,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=sma200, name="200-Day SMA", line_color="gray"), secondary_y=True,)
+    chart.add_trace(go.Scatter(x=linear_regression_df["Date"], y=sma50, name="50-Day SMA", line_color="lightgray"), secondary_y=True,)
 
     chart.update_xaxes(title_text = "Date", showline=False)
-    chart.update_yaxes(title_text="Actual Price", range=[price_data["Price"].min() * .6, price_data["Price"].max() * 1.2], zeroline = True, tickformat = '$', showgrid=True, tick0 = 0, secondary_y=False)
-    chart.update_yaxes(showticklabels = False, range=[price_data["Cumulative Returns"].min() * .6, price_data["Cumulative Returns"].max()* 1.2], tick0 = 0, secondary_y=True)
+    chart.update_yaxes(title_text="Actual Price", range=[price_data["Price"].min() * .6, price_data["Price"].max() * 1.2], zeroline = True, tickformat = '$', showgrid=True, tick0 = 0, secondary_y=True)
+    chart.update_yaxes(showticklabels = False, range=[price_data["Cumulative Returns"].min() * .6, price_data["Cumulative Returns"].max()* 1.2], tick0 = 0, secondary_y=False)
     chart.update_layout(template="simple_white")
     chart.update_traces(marker_colorscale="Earth", selector=dict(type='scatter'))
     chart.update_traces(fill="none")
     chart.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1, xanchor="left", x=.01, font = dict(size = 10, color = "black")))
     chart.update_layout(plot_bgcolor='white')
     chart.update_layout(margin=dict(l=0, r=0, t=55))
-    chart.update_yaxes(nticks = 10, secondary_y=False)
+    chart.update_yaxes(nticks = 10, secondary_y=True)
 
     return st.plotly_chart(chart)
 
@@ -342,7 +343,7 @@ arkk_correlation = arkk_correlation.round(2)
 
 st.sidebar.header('Stock Market Correlation')
 st.sidebar.caption("Correlation with market indices over time period.")
-#col1, col2, col3 = st.columns(3)
+#col1, col2, col3 = st.columns(3) # code to move indice correlation into main body of application
 st.sidebar.metric("S&P 500 (SPY)", spy_correlation, delta_color="off")
 st.sidebar.metric("NASDAQ (QQQ)", qqq_correlation, delta_color="off")
 st.sidebar.metric("Ark Innovation Fund (ARKK)", arkk_correlation, delta_color="off")
