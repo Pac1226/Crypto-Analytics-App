@@ -48,6 +48,6 @@ There are two user inputs: the timeframe and cryptocurrency. Users select one of
 
 ---
 
-## Usage
+## License
 
 MIT License
