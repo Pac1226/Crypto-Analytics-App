@@ -55,7 +55,7 @@ cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano',
 selected_asset = st.sidebar.selectbox('Cryptocurrency', cryptocurrencies)
 
 # Widget to select timeperiod
-number_of_months = st.sidebar.slider('Number of Months', min_value=1, max_value=60)
+number_of_months = st.sidebar.slider('Number of Months', value=6, min_value=1, max_value=60)
 start_date = pd.to_datetime("today") - pd.DateOffset(months=number_of_months)
 end_date = pd.to_datetime("today")
 
