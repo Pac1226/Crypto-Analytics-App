@@ -47,7 +47,7 @@ st.sidebar.caption('Select a crypto asset and the number of historical months to
 
 # Widget to select cryptocurrency
 cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano', 
-                    'BNB', 'Solana', 'Terra', 
+                    'BNB Chain', 'Solana', 'Terra', 
                     'Avalanche', 'Polkadot', 'Polygon',
                     'NEAR', 'Algorand', 'Cosmos', 
                     'Fantom','Mina', 'Celo']
