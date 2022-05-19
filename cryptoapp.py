@@ -282,7 +282,7 @@ st.bokeh_chart(hv.render(bar_chart, backend="bokeh"))
 def crypto_correlations(asset, days):
     
     correlations = crypto_returns.tail(int(days)).corr() * crypto_returns.tail(int(days)).corr()
-    correlation_asset = correlations[asset]
+    correlation_asset = correlations[f"{asset}"]
     correlation_asset = correlation_asset.drop(columns={asset})
     
     correlation_asset = correlation_asset.round(2)
