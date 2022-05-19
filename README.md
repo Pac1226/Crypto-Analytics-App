@@ -34,6 +34,7 @@ The application aggregates, cleans, and runs models on timeseries price data col
 * Algorand (ALGO)
 * Celo (CELO)
 * Mina Protocol (MINA)
+* Fantom (FTM)
 
 ---
 
