@@ -33,7 +33,7 @@ st.header('Crypto Asset Analytics')
 st.markdown("""
 This app connects to crypto APIs and runs a series of models 
 to assess past performance and predict future price trends!
-* **Python libraries:** pandas, numpy, os, streamlit, messari.messari, financialanalysis, scikit-learn
+* **Python libraries:** pandas, numpy, os, streamlit, messari.messari, yfinance, financialanalysis, scikit-learn
 * **Data source:** [Messari.io](https://messari.io/api)
 * **Models:** linear regression, risk/return analysis, and statistical correlations
 * **Charts:** all charts are interactive and can be saved as images
@@ -46,8 +46,7 @@ st.sidebar.caption('Select a crypto asset and the number of historical months to
 
 
 # Widget to select cryptocurrency
-cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano', 
-                    'BNB Chain', 'Solana', 'Terra', 
+cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano', 'Solana', 'Terra', 
                     'Avalanche', 'Polkadot', 'Polygon',
                     'NEAR', 'Algorand', 'Cosmos', 
                     'Fantom','Mina', 'Celo']
@@ -178,7 +177,6 @@ def load_crypto_prices(start_date, end_date):
     
     bitcoin_df = get_timeseries_data('Bitcoin', start_date, end_date)
     ethereum_df = get_timeseries_data('Ethereum', start_date, end_date)
-    bnb_df = get_timeseries_data('BNB', start_date, end_date)
     cardano_df = get_timeseries_data('Cardano', start_date, end_date)
     solana_df = get_timeseries_data("Solana", start_date, end_date)
     terra_df = get_timeseries_data('Terra', start_date, end_date)
@@ -192,22 +190,19 @@ def load_crypto_prices(start_date, end_date):
     mina_df = get_timeseries_data('Mina', start_date, end_date)
     celo_df = get_timeseries_data('Celo', start_date, end_date)
 
-    crypto_returns = pd.concat([bitcoin_df["Bitcoin Cumulative Returns"], 
-        ethereum_df["Ethereum Cumulative Returns"], bnb_df["BNB Cumulative Returns"],
+    crypto_returns = pd.concat([bitcoin_df["Bitcoin Cumulative Returns"], ethereum_df["Ethereum Cumulative Returns"],
         cardano_df["Cardano Cumulative Returns"], solana_df["Solana Cumulative Returns"], terra_df["Terra Cumulative Returns"], 
         avalanche_df["Avalanche Cumulative Returns"], polkadot_df["Polkadot Cumulative Returns"], polygon_df["Polygon Cumulative Returns"], 
         cosmos_df["Cosmos Cumulative Returns"], algorand_df["Algorand Cumulative Returns"], near_df["NEAR Cumulative Returns"], 
         fantom_df["Fantom Cumulative Returns"], mina_df["Mina Cumulative Returns"], celo_df["Celo Cumulative Returns"]], axis= "columns", join="inner")
 
-    crypto_prices = pd.concat([bitcoin_df["Bitcoin Price"], 
-    ethereum_df["Ethereum Price"], bnb_df["BNB Price"],
+    crypto_prices = pd.concat([bitcoin_df["Bitcoin Price"], ethereum_df["Ethereum Price"],
     cardano_df["Cardano Price"], solana_df["Solana Price"], terra_df["Terra Price"], 
     avalanche_df["Avalanche Price"], polkadot_df["Polkadot Price"], polygon_df["Polygon Price"], 
     cosmos_df["Cosmos Price"], algorand_df["Algorand Price"], near_df["NEAR Price"],
     fantom_df["Fantom Price"], mina_df["Mina Price"], celo_df["Celo Price"]], axis= "columns", join="inner")
 
-    column_names = ["Bitcoin", "Ethereum", 
-                    "BNB Chain", "Cardano",
+    column_names = ["Bitcoin", "Ethereum", "Cardano",
                     "Solana", "Terra",
                     "Avalanche", "Polkadot",
                     "Polygon", "Cosmos",
