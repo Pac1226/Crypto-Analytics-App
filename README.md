@@ -1,4 +1,4 @@
-# Crypto Web Application
+# Crypto Asset Analytics
 
 This is an interactive web application hosted on Streamlit that performs statistical analysis on cryptocurrency prices based on user inputs. It connects to the Messari API, which aggreggates data from crypto exchanges, protocols, and analytics firms. The app runs a series of statistical models on timeseries price data and displays key insights as data visualizations.
 
@@ -23,7 +23,6 @@ The application aggregates, cleans, and runs models on timeseries price data col
 
 * Bitcoin (BTC)
 * Ethereum (ETH)
-* BNB Chain (BNB)
 * Solana (SOL)
 * Cardano (ADA)
 * Terra (LUNA)
@@ -33,6 +32,8 @@ The application aggregates, cleans, and runs models on timeseries price data col
 * NEAR Protocol (NEAR)
 * Cosmos (ATOM)
 * Algorand (ALGO)
+* Celo (CELO)
+* Mina Protocol (MINA)
 
 ---
 
