@@ -350,3 +350,5 @@ st.sidebar.caption("Correlation with market indices over time period.")
 st.sidebar.metric("S&P 500 (SPY)", spy_correlation, delta_color="off")
 st.sidebar.metric("NASDAQ (QQQ)", qqq_correlation, delta_color="off")
 st.sidebar.metric("Ark Innovation Fund (ARKK)", arkk_correlation, delta_color="off")
+
+st.caption("Refresh browser if app returns an error for submitting too many API requests.")
