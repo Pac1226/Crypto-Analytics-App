@@ -46,8 +46,7 @@ st.sidebar.caption('Select a crypto asset and the number of historical months to
 
 # Widget to select cryptocurrency
 cryptocurrencies = ['Bitcoin', 'Ethereum', 'Cardano', 
-                    'Solana', 'Terra', 
-                    'Avalanche', 'Polkadot', 'Polygon',
+                    'Solana','Avalanche', 'Polkadot', 'Polygon',
                     'NEAR', 'Algorand', 'Cosmos', 
                     'Fantom','Mina', 'Celo']
 
@@ -173,7 +172,6 @@ def load_crypto_prices(start_date, end_date):
     ethereum_df = get_timeseries_data('Ethereum', start_date, end_date)
     cardano_df = get_timeseries_data('Cardano', start_date, end_date)
     solana_df = get_timeseries_data("Solana", start_date, end_date)
-    terra_df = get_timeseries_data('Terra', start_date, end_date)
     avalanche_df = get_timeseries_data('Avalanche', start_date, end_date)
     polkadot_df = get_timeseries_data('Polkadot', start_date, end_date)
     polygon_df = get_timeseries_data('Polygon', start_date, end_date)
@@ -185,21 +183,20 @@ def load_crypto_prices(start_date, end_date):
     celo_df = get_timeseries_data('Celo', start_date, end_date)
 
     crypto_returns = pd.concat([bitcoin_df["Bitcoin Cumulative Returns"], ethereum_df["Ethereum Cumulative Returns"],
-        cardano_df["Cardano Cumulative Returns"], solana_df["Solana Cumulative Returns"], terra_df["Terra Cumulative Returns"], 
+        cardano_df["Cardano Cumulative Returns"], solana_df["Solana Cumulative Returns"], 
         avalanche_df["Avalanche Cumulative Returns"], polkadot_df["Polkadot Cumulative Returns"], polygon_df["Polygon Cumulative Returns"], 
         cosmos_df["Cosmos Cumulative Returns"], algorand_df["Algorand Cumulative Returns"], near_df["NEAR Cumulative Returns"], 
         fantom_df["Fantom Cumulative Returns"], mina_df["Mina Cumulative Returns"], celo_df["Celo Cumulative Returns"]], axis= "columns", join="inner")
 
     crypto_prices = pd.concat([bitcoin_df["Bitcoin Price"], ethereum_df["Ethereum Price"],
-    cardano_df["Cardano Price"], solana_df["Solana Price"], terra_df["Terra Price"], 
+    cardano_df["Cardano Price"], solana_df["Solana Price"], 
     avalanche_df["Avalanche Price"], polkadot_df["Polkadot Price"], polygon_df["Polygon Price"], 
     cosmos_df["Cosmos Price"], algorand_df["Algorand Price"], near_df["NEAR Price"],
     fantom_df["Fantom Price"], mina_df["Mina Price"], celo_df["Celo Price"]], axis= "columns", join="inner")
 
     column_names = ["Bitcoin", "Ethereum", 
                     "Celo", "Cardano",
-                    "Solana", "Terra",
-                    "Avalanche", "Polkadot",
+                    "Solana", "Avalanche", "Polkadot",
                     "Polygon", "Cosmos",
                     "Algorand", "NEAR", 
                     "Fantom", "Mina"]
@@ -350,5 +347,3 @@ st.sidebar.caption("Correlation with market indices over time period.")
 st.sidebar.metric("S&P 500 (SPY)", spy_correlation, delta_color="off")
 st.sidebar.metric("NASDAQ (QQQ)", qqq_correlation, delta_color="off")
 st.sidebar.metric("Ark Innovation Fund (ARKK)", arkk_correlation, delta_color="off")
-
-st.caption("Refresh browser if app returns an error for submitting too many API requests.")
