@@ -27,7 +27,7 @@ alpaca_secret_key = st.secrets["ALPACA_SECRET_KEY"]
 # Application Page Configuration: Headers & Sidebar #
 
 st.set_option('deprecation.showPyplotGlobalUse', False)
-st.header('Crypto Asset Analytics')
+st.title('Crypto Analytics App')
 
 st.markdown("""
 This app connects to crypto APIs and runs a series of models 
