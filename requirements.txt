@@ -1,5 +1,5 @@
 pandas==1.3.4
-numpy==1.20.3
+numpy==1.21
 financialanalysis==1.2.0
 streamlit==1.9.2
 git+https://github.com/messari/messari-python-api.git
